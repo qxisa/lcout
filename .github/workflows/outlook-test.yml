@@ -23,6 +23,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser
+          # Verify installation
+          chromium-browser --version
 
       - name: Run login script
         run: python login_script.py
