@@ -1,4 +1,5 @@
 import time
+import tempfile
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -8,21 +9,30 @@ from selenium.webdriver.chrome.service import Service
 EMAIL = "bakabdal@sutherlandglobal.com"
 PASSWORD = "12345678"
 INTERVAL = 5          # seconds between attempts
-MAX_ATTEMPTS = 1000   # or set to None for unlimited
+MAX_ATTEMPTS = 1000   # set to None for unlimited
 
 def login_attempt(attempt_number):
+    # Create a temporary directory for user data to avoid permission issues
+    temp_dir = tempfile.mkdtemp()
+
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
+    chrome_options.binary_location = "/usr/bin/chromium-browser"
+
+    # Essential headless options
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--disable-setuid-sandbox")
+    chrome_options.add_argument("--remote-debugging-port=9222")
+    chrome_options.add_argument(f"--user-data-dir={temp_dir}")
+
+    # Stealth options to avoid detection
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option("useAutomationExtension", False)
 
-    # Tell Selenium where Chromium is installed
-    chrome_options.binary_location = "/usr/bin/chromium-browser"
-
-    # Use webdriver-manager to get the correct chromedriver
+    # Use webdriver-manager to get correct chromedriver
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
@@ -51,6 +61,9 @@ def login_attempt(attempt_number):
         return False
     finally:
         driver.quit()
+        # Clean up temporary directory
+        import shutil
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 if __name__ == "__main__":
     attempt = 0
