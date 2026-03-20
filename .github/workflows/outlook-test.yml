@@ -1,7 +1,7 @@
 name: Outlook Login Test (Infinite Loop)
 
 on:
-  workflow_dispatch:          # manual trigger
+  workflow_dispatch:
 
 jobs:
   test-login:
@@ -16,14 +16,13 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install selenium
+        run: |
+          pip install selenium webdriver-manager
 
-      - name: Install Chrome and ChromeDriver
+      - name: Install Chromium
         run: |
           sudo apt-get update
-          sudo apt-get install -y chromium-browser chromium-chromedriver
-          echo "CHROME_BIN=/usr/bin/chromium-browser" >> $GITHUB_ENV
-          echo "CHROMEDRIVER_PATH=/usr/bin/chromedriver" >> $GITHUB_ENV
+          sudo apt-get install -y chromium-browser
 
-      - name: Run login script (infinite loop)
+      - name: Run login script
         run: python login_script.py
