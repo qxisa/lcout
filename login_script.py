@@ -2,11 +2,13 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-import sys
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 
 EMAIL = "bakabdal@sutherlandglobal.com"
 PASSWORD = "12345678"
 INTERVAL = 5          # seconds between attempts
+MAX_ATTEMPTS = 1000   # or set to None for unlimited
 
 def login_attempt(attempt_number):
     chrome_options = Options()
@@ -17,7 +19,13 @@ def login_attempt(attempt_number):
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option("useAutomationExtension", False)
 
-    driver = webdriver.Chrome(options=chrome_options)
+    # Tell Selenium where Chromium is installed
+    chrome_options.binary_location = "/usr/bin/chromium-browser"
+
+    # Use webdriver-manager to get the correct chromedriver
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+
     try:
         driver.get("https://outlook.live.com/")
         time.sleep(3)
@@ -40,7 +48,6 @@ def login_attempt(attempt_number):
         return True
     except Exception as e:
         print(f"Attempt {attempt_number} failed: {e}")
-        # Return False if we want to stop on failure, but we'll continue in loop
         return False
     finally:
         driver.quit()
@@ -49,5 +56,8 @@ if __name__ == "__main__":
     attempt = 0
     while True:
         attempt += 1
+        if MAX_ATTEMPTS and attempt > MAX_ATTEMPTS:
+            print("Max attempts reached. Exiting.")
+            break
         login_attempt(attempt)
         time.sleep(INTERVAL)
